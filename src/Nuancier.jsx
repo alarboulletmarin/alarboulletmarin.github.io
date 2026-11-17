@@ -2,6 +2,10 @@
 import { Component, Fragment } from 'react';
 import DebarrasDemo from './demos/Debarras.jsx';
 import AstrolabeDemo from './demos/Astrolabe.jsx';
+import AplatDemo from './demos/Aplat.jsx';
+import DadaDemo from './demos/Dada.jsx';
+import TrcedDemo from './demos/Trced.jsx';
+import ZonedCalc from './demos/ZonedCalc.jsx';
 
 // "a: b; c: d" -> { a: 'b', c: 'd' }, so the design's inline styles stay readable.
 const cssCache = new Map();
@@ -159,9 +163,6 @@ const LINE_STYLE = {
   h3: { font: "'IBM Plex Serif', serif", weight: 600, sizeM: '18px', size: '16px', lh: '1.35', margin: '10px 0 2px' },
   p: { font: "'IBM Plex Sans', sans-serif", weight: 400, sizeM: '16px', size: '14px', lh: '1.6', margin: '1px 0' }
 };
-
-// Dada : les faces du dé (grille 3 × 3)
-const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 
 const T = {
   fr: {
@@ -336,10 +337,9 @@ export default class Nuancier extends Component {
     super(props);
     this.state = {
       lang: null, theme: 'system', sysLang: 'fr', sysDark: false, active: -1, sheet: -1, band: -1, wide: true, touch: false, now: new Date(),
-      zi: 4, zScan: -1, zDrawing: false, zDrawn: false,
+      zi: 4, zScan: -1, zDrawing: false, zDrawn: false, zTab: 'draw',
       blines: null,
-      query: '', sel: 0, locked: false,
-      face: 4, rolling: false, rolled: 0
+      query: '', sel: 0, locked: false
     };
     this.timers = [];
     this.focusIn = false;
@@ -397,19 +397,6 @@ export default class Nuancier extends Component {
     times.forEach((at, i) => this.later(() => {
       if (i === times.length - 1) this.setState({ zDrawing: false, zScan: -1, zi: final, zDrawn: true });
       else this.setState({ zScan: Math.floor(Math.random() * SESSIONS.length) });
-    }, at));
-  }
-
-  // ---------- Dada : le dé
-  roll() {
-    if (this.state.rolling) return;
-    const final = 1 + Math.floor(Math.random() * 6);
-    if (reduced()) { this.setState({ face: final, rolled: final }); return; }
-    const times = scanSchedule(700, 40, 1.2);
-    this.setState({ rolling: true });
-    times.forEach((at, i) => this.later(() => {
-      if (i === times.length - 1) this.setState({ rolling: false, face: final, rolled: final });
-      else this.setState({ face: 1 + Math.floor(Math.random() * 6) });
     }, at));
   }
 
@@ -719,21 +706,6 @@ export default class Nuancier extends Component {
     const ac = Object.assign(dark ? { frame: '#22314F', shadow: 'rgba(247, 243, 230, 0.14)' } : { frame: '#17243F', shadow: 'rgba(23, 36, 63, 0.13)' },
       s.wide ? { w: '150px', h: '325px' } : { w: 'calc(min(420px, 56dvh) * 0.4615)', h: 'min(420px, 56dvh)' });
 
-    // --- Dada
-    const di = dark ? { ink: '#F2E6D2', shade: '#0B0806', card: '#2A211A' } : { ink: '#3B2A1E', shade: '#3B2A1E', card: '#FFFDF5' };
-    const cream = '#FFF7E6';
-    const dd = {
-      dir: s.wide ? 'row' : 'column', gap: s.wide ? '28px' : '10px',
-      die: s.wide ? '112px' : 'min(96px, 12dvh)', msgH: s.wide ? '44px' : '0', btnH: s.wide ? '64px' : 'min(58px, 8dvh)',
-      ink: di.ink, shade: di.shade, dieBg: di.card,
-      dieClass: s.rolling ? 'dada-roule' : '',
-      pips: [0, 1, 2, 3, 4, 5, 6, 7, 8].map((k) => ({ op: PIPS[s.face].includes(k) ? 1 : 0 })),
-      msg: s.rolled ? (s.rolled === 6 ? t.six : t.rolled.replace('{n}', s.rolled)) : t.rollIdle,
-      roll: () => this.roll(),
-      logo: [['D', '#E9564B', cream, '-2deg'], ['A', '#57B26A', cream, '1.5deg'], ['D', '#4C93D8', cream, '-1.5deg'], ['A', '#F4C43C', '#2A1E16', '2deg']].map(([c, bg, fg, rot]) => ({ c, bg, fg, rot })),
-      buttons: t.dadaButtons.map(([label, hint], i) => ({ label, hint, bg: ['#E9564B', '#4C93D8', di.card][i], fg: i < 2 ? cream : di.ink }))
-    };
-
     const opt = (on, label, pick) => ({ on: on ? 'true' : 'false', deco: on ? 'underline' : 'none', op: on ? 1 : 0.55, label, pick });
     const langs = ['fr', 'en'].map((l) => opt(lang === l, l, () => this.setState({ lang: l })));
     const themes = ['system', 'light', 'dark'].map((k) => opt(s.theme === k, t.themes[k], () => this.setState({ theme: k })));
@@ -744,7 +716,11 @@ export default class Nuancier extends Component {
       t, lang, projects, langs, themes, pv,
       spotActive: found.length ? 'spot-r-' + sel : '',
       zc, zs, zd, zr, bc, bref, sc, results, noResult: results.length === 0, query: s.query, locked: s.locked,
-      aplatShots, ac, dd,
+      aplatShots, ac,
+      zTab: s.zTab,
+      zTabs: [['draw', lang === 'fr' ? 'Tirage' : 'Draw'], ['calc', lang === 'fr' ? 'Allures' : 'Paces']].map(([k, label]) => ({
+        label, on: s.zTab === k ? 'true' : 'false', bg: s.zTab === k ? zc.ink : 'transparent', fg: s.zTab === k ? zc.card : 'inherit',
+        pick: () => this.setState({ zTab: k }) })),
       drawSession: () => this.draw(),
       onQuery: (e) => this.setState({ query: e.target.value, sel: 0, locked: false }),
       onQueryKey: (e) => {
@@ -953,7 +929,8 @@ export default class Nuancier extends Component {
 {(bd.facts).map((f, f_i) => (<Fragment key={f_i}><li style={css(`padding: 2px 10px; border: 1px solid currentColor; border-radius: 999px; opacity: 0.8`)}>{f.t}</li></Fragment>))}
 </ul>
 <div style={css(`flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 16px`)}>
-{bd.isZoned ? (<><div style={css(`display: flex; flex-direction: column; gap: 20px; padding: 24px; background: ${v.zc.card}; border: 1px solid ${v.zc.ink}; border-radius: 26px; color: ${v.zc.ink}`)}>
+{bd.isZoned ? (<><div role="tablist" aria-label="Zoned" style={css(`display: flex; gap: 4px; font-family: 'Space Grotesk', sans-serif; font-size: 14px`)}>{(v.zTabs).map((y, y_i) => (<Fragment key={y_i}><button type="button" role="tab" aria-selected={y.on} onClick={y.pick} style={css(`min-height: 40px; padding: 0 16px; border: 1px solid ${v.zc.ink}; border-radius: 999px; background: ${y.bg}; color: ${y.fg}; font: inherit; cursor: pointer`)}>{y.label}</button></Fragment>))}</div>
+{v.zTab === 'calc' ? <ZonedCalc dark={v.dark} wide={v.wide} lang={v.lang} /> : (<><div style={css(`display: flex; flex-direction: column; gap: 20px; padding: 24px; background: ${v.zc.card}; border: 1px solid ${v.zc.ink}; border-radius: 26px; color: ${v.zc.ink}`)}>
 <div style={css(`display: flex; align-items: center; gap: 16px; flex-wrap: wrap`)}>
 <button type="button" onClick={v.drawSession} disabled={v.zd.drawing} style={css(`display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 22px; border: 0; border-radius: 999px; background: ${v.zc.accent}; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 15px; cursor: pointer; opacity: ${v.zd.btnOp}`)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="7" width="12" height="12" rx="2"></rect><path d="M7 7l3-4.5a2 2 0 0 1 2.7-.6l7 4.1a2 2 0 0 1 .7 2.7L17 15"></path><circle cx="5.5" cy="10.5" r="0.6" fill="currentColor"></circle><circle cx="10.5" cy="15.5" r="0.6" fill="currentColor"></circle></svg>{v.zd.label}</button>
 <span style={css(`font-family: 'JetBrains Mono', monospace; font-size: 12px; color: ${v.zc.faint}`)}>{v.zd.count}</span>
@@ -985,7 +962,7 @@ export default class Nuancier extends Component {
 </a>
 </>) : null}
 </div>
-</div></>) : null}
+</div></>)}</>) : null}
 {bd.isBref ? (<><div style={css(`flex: ${v.bref.winFlex}; min-height: 0; display: flex; flex-direction: column; border-radius: 12px; background: ${v.bc.chrome}; border: 1px solid ${v.bc.edge}; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16); overflow: hidden; color: ${v.bc.ink}`)}>
 <div aria-hidden="true" style={css(`display: flex; justify-content: flex-end; align-items: center; gap: 16px; height: 32px; padding: 0 14px; color: ${v.bc.faint}`)}>
 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M1 5h8"></path></svg>
@@ -1056,54 +1033,11 @@ export default class Nuancier extends Component {
 </button>
 </>) : null}
 </div></>) : null}
-{bd.isAplat ? (<><div style={css(`margin-top: 8px; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%)`)}>
-<div className="aplat-piste" style={css(`display: flex; width: max-content; padding: 10px 0 12px`)}>
-{(v.aplatShots).map((s, s_i) => (<Fragment key={s_i}>
-<a className="aplat-tuile" href={s.href} target="_blank" rel="noopener" tabIndex={s.tab} aria-label={s.aria} style={css(`margin: 0 20px 0 0; display: flex; flex-direction: column; align-items: center; gap: 10px; color: inherit; text-decoration: none`)}>
-<img src={s.src} alt="" style={css(`display: block; width: ${v.ac.w}; height: ${v.ac.h}; object-fit: cover; border-radius: 24px; border: 5px solid ${v.ac.frame}; box-shadow: 8px 8px 0 ${v.ac.shadow}`)} />
-<span style={css(`font-family: 'Archivo', sans-serif; font-weight: 500; font-size: 13px`)}>{s.label}</span>
-</a>
-</Fragment>))}
-</div>
-</div>
-<p style={css(`margin: 0; font-family: 'Archivo', sans-serif; font-size: 13px; opacity: 0.65`)}>{v.t.aplatHint}</p></>) : null}
-{bd.isTrced ? (<>
-<div style={css(`display: flex; flex-direction: column; gap: 22px; font-family: 'JetBrains Mono', monospace`)}>
-<p style={css(`margin: 0; font-size: 20px; font-weight: 700`)}>{v.tr.tagline}</p>
-<ul style={css(`list-style: none; margin: 0; padding: 0; border-top: 1px solid currentColor`)}>
-{(v.tr.apps).map((y, y_i) => (<Fragment key={y_i}><li style={css(`display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid ${v.tr.rule}; font-size: 14px`)}><span style={css(`font-weight: 700`)}>{y.name}</span><span style={css(`opacity: 0.75`)}>{y.desc}</span><span style={css(`opacity: 0.55; font-variant-numeric: tabular-nums`)}>{y.status}</span></li></Fragment>))}
-</ul>
-<ol style={css(`list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px`)}>
-{(v.tr.principles).map((y, y_i) => (<Fragment key={y_i}><li style={css(`display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 8px`)}><span style={css(`opacity: 0.55`)}>{y.n}</span><span>{y.text}</span></li></Fragment>))}
-</ol>
-</div>
-</>) : null}
+{bd.isAplat ? <AplatDemo shots={v.aplatShots} frame={v.ac} hint={v.t.aplatHint} dark={v.dark} wide={v.wide} lang={v.lang} /> : null}
+{bd.isTrced ? <TrcedDemo tr={v.tr} dark={v.dark} wide={v.wide} lang={v.lang} /> : null}
 {bd.isDebarras ? <DebarrasDemo dark={v.dark} wide={v.wide} lang={v.lang} /> : null}
 {bd.isAstrolabe ? <AstrolabeDemo dark={v.dark} wide={v.wide} lang={v.lang} /> : null}
-{bd.isDada ? (<><div aria-label="Dada" role="img" style={css(`display: flex; gap: 8px; padding-top: 6px`)}>
-{(v.dd.logo).map((g, g_i) => (<Fragment key={g_i}>
-<span style={css(`display: grid; place-items: center; width: clamp(46px, 12vw, 58px); height: clamp(54px, 14vw, 68px); box-sizing: border-box; border: 4px solid ${v.dd.ink}; border-radius: 18px; box-shadow: 0 5px 0 ${v.dd.shade}; background: ${g.bg}; color: ${g.fg}; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(30px, 8vw, 40px); line-height: 1; transform: rotate(${g.rot})`)}>{g.c}</span>
-</Fragment>))}
-</div>
-<p style={css(`margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px; opacity: 0.8`)}>{v.t.dadaTagline}</p>
-<div style={css(`display: flex; flex-direction: ${v.dd.dir}; gap: ${v.dd.gap}; align-items: center`)}>
-<div style={css(`display: flex; flex-direction: column; align-items: center; gap: 8px; width: 150px`)}>
-<button type="button" className="dada-btn" onClick={v.dd.roll} aria-label={v.t.roll} style={css(`width: ${v.dd.die}; height: ${v.dd.die}; box-sizing: border-box; padding: 14px; border: 4px solid ${v.dd.ink}; border-radius: 26px; background: ${v.dd.dieBg}; box-shadow: 0 6px 0 ${v.dd.shade}; cursor: pointer`)}>
-<span className={v.dd.dieClass} style={css(`display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); width: 100%; height: 100%`)}>
-{(v.dd.pips).map((q, q_i) => (<Fragment key={q_i}><span style={css(`display: grid; place-items: center`)}><span style={css(`width: 16px; height: 16px; border-radius: 50%; background: ${v.dd.ink}; opacity: ${q.op}`)}></span></span></Fragment>))}
-</span>
-</button>
-<p aria-live="polite" style={css(`margin: 0; min-height: ${v.dd.msgH}; text-align: center; font-weight: 700; font-size: 14px; line-height: 1.3`)}>{v.dd.msg}</p>
-</div>
-<div style={css(`flex: 1; align-self: stretch; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 14px`)}>
-{(v.dd.buttons).map((b, b_i) => (<Fragment key={b_i}>
-<a className="dada-btn" href="https://dada-kohl.vercel.app" target="_blank" rel="noopener" style={css(`display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: ${v.dd.btnH}; padding: 6px 18px; box-sizing: border-box; border: 4px solid ${v.dd.ink}; border-radius: 24px; background: ${b.bg}; color: ${b.fg}; box-shadow: 0 6px 0 ${v.dd.shade}; text-decoration: none; text-align: center`)}>
-<span style={css(`font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 20px; line-height: 1.1`)}>{b.label}</span>
-<span style={css(`font-weight: 700; font-size: 12px; line-height: 1.2; opacity: 0.8`)}>{b.hint}</span>
-</a>
-</Fragment>))}
-</div>
-</div></>) : null}
+{bd.isDada ? <DadaDemo dark={v.dark} wide={v.wide} lang={v.lang} /> : null}
 </div>
 <div style={css(`display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 28px`)}>
 <ul style={css(`list-style: none; margin: 0; padding: 0; display: ${v.featDisp}; grid-template-columns: ${v.featCols}; gap: ${v.featGap}; flex: 1; min-width: ${v.featMinW}; font-size: ${v.featSize}; line-height: 1.4`)}>
