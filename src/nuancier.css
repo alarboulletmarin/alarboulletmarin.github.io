@@ -1,0 +1,56 @@
+@font-face{font-family:'Iosevka';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/75c83160696f425221968cc7de9238b4.woff2) format('woff2')}
+@font-face{font-family:'Iosevka';font-style:italic;font-weight:400;font-display:swap;src:url(/fonts/c29798a75c307418824fc7f38cedd3d5.woff2) format('woff2')}
+@font-face{font-family:'Iosevka';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/190b3b4ac577b5e4a244408041b03965.woff2) format('woff2')}
+body{margin:0}
+a{color:inherit;text-decoration-line:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+a:hover{text-decoration-thickness:2px}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:1px dashed currentColor;outline-offset:3px}
+@keyframes aplat-defile{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.aplat-piste{animation:aplat-defile 48s linear infinite}
+.aplat-piste:hover{animation-play-state:paused}
+.aplat-tuile img{transition:transform .25s ease}
+.aplat-tuile:hover img{transform:translateY(-6px) rotate(-1.5deg)}
+@keyframes zoned-scan{from{transform:translateX(-100%)}to{transform:translateX(400%)}}
+.zoned-sweep{animation:zoned-scan 600ms linear infinite}
+.zoned-carte{transition:background-color .15s ease,transform .15s ease}
+.zoned-lien:hover .zoned-carte{background-image:linear-gradient(rgba(127,127,127,.07),rgba(127,127,127,.07))}
+.zoned-lien:active .zoned-carte{transform:translateY(1px)}
+@keyframes zoned-pose{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.zoned-pose{animation:zoned-pose .28s cubic-bezier(.2,0,0,1)}
+@keyframes dada-roule{0%{transform:rotate(0) scale(1)}30%{transform:rotate(-14deg) scale(1.06)}60%{transform:rotate(10deg) scale(.97)}100%{transform:rotate(0) scale(1)}}
+.dada-roule{animation:dada-roule .18s ease-in-out infinite}
+.dada-btn{transition:transform .08s ease,box-shadow .08s ease}
+.dada-btn:active{transform:translateY(4px)}
+.bref-ligne{transition:background-color .12s ease}
+.bref-ligne:hover{background-color:rgba(127,127,127,.07)}
+.bref-outil:hover{background-color:rgba(127,127,127,.12)}
+.spot-ligne{transition:background-color .1s ease}
+.bref-saisie::selection{background:rgba(155,72,36,.28);color:transparent}
+.bref-saisie:focus{outline:none}
+/* Coureur de Zoned (run-cycle.css) : six poses coupées net ; la cadence suit la zone */
+@keyframes rc-frame{0%,16.66%{opacity:1}16.67%,100%{opacity:0}}
+.rc-f{opacity:0;animation:rc-frame 660ms steps(1) infinite}
+.rc-f--1{opacity:1}
+.rc-z1 .rc-f{animation-duration:900ms}
+.rc-z1 .rc-f--1{animation-delay:0ms} .rc-z1 .rc-f--2{animation-delay:150ms} .rc-z1 .rc-f--3{animation-delay:300ms} .rc-z1 .rc-f--4{animation-delay:450ms} .rc-z1 .rc-f--5{animation-delay:600ms} .rc-z1 .rc-f--6{animation-delay:750ms}
+.rc-z2 .rc-f{animation-duration:660ms}
+.rc-z2 .rc-f--1{animation-delay:0ms} .rc-z2 .rc-f--2{animation-delay:110ms} .rc-z2 .rc-f--3{animation-delay:220ms} .rc-z2 .rc-f--4{animation-delay:330ms} .rc-z2 .rc-f--5{animation-delay:440ms} .rc-z2 .rc-f--6{animation-delay:550ms}
+.rc-z3 .rc-f{animation-duration:560ms}
+.rc-z3 .rc-f--1{animation-delay:0ms} .rc-z3 .rc-f--2{animation-delay:93ms} .rc-z3 .rc-f--3{animation-delay:187ms} .rc-z3 .rc-f--4{animation-delay:280ms} .rc-z3 .rc-f--5{animation-delay:373ms} .rc-z3 .rc-f--6{animation-delay:467ms}
+.rc-z4 .rc-f{animation-duration:480ms}
+.rc-z4 .rc-f--1{animation-delay:0ms} .rc-z4 .rc-f--2{animation-delay:80ms} .rc-z4 .rc-f--3{animation-delay:160ms} .rc-z4 .rc-f--4{animation-delay:240ms} .rc-z4 .rc-f--5{animation-delay:320ms} .rc-z4 .rc-f--6{animation-delay:400ms}
+.rc-z5 .rc-f{animation-duration:400ms}
+.rc-z5 .rc-f--1{animation-delay:0ms} .rc-z5 .rc-f--2{animation-delay:67ms} .rc-z5 .rc-f--3{animation-delay:133ms} .rc-z5 .rc-f--4{animation-delay:200ms} .rc-z5 .rc-f--5{animation-delay:267ms} .rc-z5 .rc-f--6{animation-delay:333ms}
+.rc-z6 .rc-f{animation-duration:340ms}
+.rc-z6 .rc-f--1{animation-delay:0ms} .rc-z6 .rc-f--2{animation-delay:57ms} .rc-z6 .rc-f--3{animation-delay:113ms} .rc-z6 .rc-f--4{animation-delay:170ms} .rc-z6 .rc-f--5{animation-delay:227ms} .rc-z6 .rc-f--6{animation-delay:283ms}
+.rc-scan .rc-f{animation-duration:260ms}
+.rc-scan .rc-f--1{animation-delay:0ms} .rc-scan .rc-f--2{animation-delay:43ms} .rc-scan .rc-f--3{animation-delay:87ms} .rc-scan .rc-f--4{animation-delay:130ms} .rc-scan .rc-f--5{animation-delay:173ms} .rc-scan .rc-f--6{animation-delay:217ms}
+.rc-scan svg{transform:translateX(2px) rotate(3deg);transition:transform .2s ease}
+@media (prefers-reduced-motion: reduce){.rc-f{animation:none}}
+@media (prefers-reduced-motion: reduce){.aplat-piste,.zoned-sweep,.dada-roule,.zoned-pose{animation:none}}
+.bande{transition:flex-grow .7s cubic-bezier(.2,0,0,1),flex-basis .7s cubic-bezier(.2,0,0,1)}
+.bande-nom{transition:font-size .5s cubic-bezier(.2,0,0,1),opacity .3s ease}
+@keyframes bande-entre{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.bande-contenu{animation:bande-entre .5s cubic-bezier(.2,0,0,1) .18s both}
+.index-ligne{transition:opacity .25s ease}
+@media (prefers-reduced-motion: reduce){.bande,.bande-nom{transition:none}.bande-contenu{animation:none}}
