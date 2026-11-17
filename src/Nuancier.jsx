@@ -3,6 +3,7 @@ import { Component, Fragment } from 'react';
 import DebarrasDemo from './demos/Debarras.jsx';
 import AstrolabeDemo from './demos/Astrolabe.jsx';
 import AplatDemo from './demos/Aplat.jsx';
+import BrefDemo from './demos/Bref.jsx';
 import DadaDemo from './demos/Dada.jsx';
 import TrcedDemo from './demos/Trced.jsx';
 import ZonedCalc from './demos/ZonedCalc.jsx';
@@ -122,48 +123,6 @@ function calc(src) {
   try { const v = expr(); if (i !== s.length || !isFinite(v)) return null; return Math.round(v * 1e10) / 1e10; } catch (e) { return null; }
 }
 
-// Bref : la note de démonstration du README
-const NOTE = {
-  fr: ['# Voyage à Lisbonne', 'Trois jours en **mai**, arrivée un *jeudi*. Le budget et les réservations sont dans [[Budget 2026]], les idées portent le tag #voyage.', '> [!TIP] Réserver le train pour Sintra la ==veille==.', '## À réserver', '- [x] Vols', '- [ ] Hôtel près de l’Alfama', '- [ ] Excursion à Sintra', ''],
-  en: ['# Trip to Lisbon', 'Three days in **May**, flying in on a *Thursday*. Budget and bookings live in [[Budget 2026]], ideas are tagged #travel.', '> [!TIP] Book the Sintra train the ==evening before==.', '## To book', '- [x] Flights', '- [ ] Hotel near Alfama', '- [ ] Day trip to Sintra', '']
-};
-const INLINE = /(\*\*[^*]+\*\*|~~[^~]+~~|==[^=]+==|\*[^*\s][^*]*\*|`[^`]+`|\[\[[^\]]+\]\]|(?:^|(?<=\s))#[\p{L}\p{N}_-]+)/gu;
-function inlineTokens(text) {
-  const out = [];
-  let last = 0, m;
-  INLINE.lastIndex = 0;
-  while ((m = INLINE.exec(text))) {
-    if (m.index > last) out.push({ k: 'text', text: text.slice(last, m.index) });
-    const w = m[0];
-    const pair = (o, kind) => { out.push({ k: 'mark', text: o }); out.push({ k: kind, text: w.slice(o.length, w.length - (kind === 'link' ? 2 : o.length)) }); out.push({ k: 'mark', text: kind === 'link' ? ']]' : o }); };
-    if (w.startsWith('**')) pair('**', 'bold');
-    else if (w.startsWith('~~')) pair('~~', 'strike');
-    else if (w.startsWith('==')) pair('==', 'hl');
-    else if (w.startsWith('`')) pair('`', 'code');
-    else if (w.startsWith('[[')) pair('[[', 'link');
-    else if (w.startsWith('#')) out.push({ k: 'tag', text: w });
-    else pair('*', 'ital');
-    last = m.index + w.length;
-  }
-  if (last < text.length) out.push({ k: 'text', text: text.slice(last) });
-  return out;
-}
-function blockOf(raw) {
-  let m;
-  if ((m = /^(#{1,3}) (.*)$/.exec(raw))) return { kind: 'h' + m[1].length, prefix: m[1] + ' ', body: m[2] };
-  if ((m = /^- \[([ xX])\] ?(.*)$/.exec(raw))) return { kind: 'task', done: m[1] !== ' ', prefix: '', body: m[2] };
-  if ((m = /^> \[!(\w+)\] ?(.*)$/.exec(raw))) return { kind: 'callout', prefix: '> [!' + m[1] + '] ', body: m[2] };
-  if ((m = /^> ?(.*)$/.exec(raw))) return { kind: 'quote', prefix: '> ', body: m[1] };
-  if ((m = /^- (.*)$/.exec(raw))) return { kind: 'li', prefix: '- ', body: m[1] };
-  return { kind: 'p', prefix: '', body: raw };
-}
-const LINE_STYLE = {
-  h1: { font: "'IBM Plex Serif', serif", weight: 600, sizeM: '26px', size: '24px', lh: '1.25', margin: '4px 0 6px' },
-  h2: { font: "'IBM Plex Serif', serif", weight: 600, sizeM: '20px', size: '18px', lh: '1.3', margin: '12px 0 2px' },
-  h3: { font: "'IBM Plex Serif', serif", weight: 600, sizeM: '18px', size: '16px', lh: '1.35', margin: '10px 0 2px' },
-  p: { font: "'IBM Plex Sans', sans-serif", weight: 400, sizeM: '16px', size: '14px', lh: '1.6', margin: '1px 0' }
-};
-
 const T = {
   fr: {
     bio: "Ingénieur logiciel à Nice, côté IA appliquée. À côté, je fais de petites apps qui tournent chez vous : pas de compte, pas de pistage, hors ligne. Et je fais du triathlon.",
@@ -188,9 +147,6 @@ const T = {
     cats: { endurance: 'Endurance', recovery: 'Récup', race_pace: 'Allure course', fartlek: 'Fartlek', vma_intervals: 'VMA', mixed: 'Mixte', threshold: 'Seuil', trail: 'Trail', hills: 'Côtes', long_run: 'Sortie longue', tempo: 'Tempo' },
     lvls: { beginner: 'Débutant', intermediate: 'Intermédiaire', advanced: 'Avancé', elite: 'Élite' },
     profile: 'Profil de la séance par zone',
-    editLine: 'Ligne en cours d’édition', taskLabel: 'Cocher ou décocher',
-    tools: { b: 'Gras', i: 'Italique', s: 'Barré', h: 'Surligné', c: 'Code', l: 'Lien', t: 'Case à cocher' },
-    words: 'mots', chars: 'caractères',
     searchLabel: 'Rechercher', searchPh: 'Rechercher…', noResult: 'Aucun résultat',
     kinds: { app: 'Application', folder: 'Dossier', file: 'Fichier', project: 'Projet', calc: 'Calcul', system: 'Système', clock: 'Horloge', contact: 'Contact', fact: 'Défi' },
     eggs: {
@@ -225,9 +181,6 @@ const T = {
     cats: { endurance: 'Endurance', recovery: 'Recovery', race_pace: 'Race Pace', fartlek: 'Fartlek', vma_intervals: 'VO2max', mixed: 'Mixed', threshold: 'Threshold', trail: 'Trail', hills: 'Hills', long_run: 'Long Run', tempo: 'Tempo' },
     lvls: { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced', elite: 'Elite' },
     profile: 'Session profile by zone',
-    editLine: 'Line being edited', taskLabel: 'Toggle the task',
-    tools: { b: 'Bold', i: 'Italic', s: 'Strikethrough', h: 'Highlight', c: 'Code', l: 'Link', t: 'Checkbox' },
-    words: 'words', chars: 'characters',
     searchLabel: 'Search', searchPh: 'Search…', noResult: 'No results',
     kinds: { app: 'Application', folder: 'Folder', file: 'File', project: 'Project', calc: 'Calculation', system: 'System', clock: 'Clock', contact: 'Contact', fact: 'Challenge' },
     eggs: {
@@ -338,12 +291,10 @@ export default class Nuancier extends Component {
     this.state = {
       lang: null, theme: 'system', sysLang: 'fr', sysDark: false, active: -1, sheet: -1, band: -1, wide: true, touch: false, now: new Date(),
       zi: 4, zScan: -1, zDrawing: false, zDrawn: false, zTab: 'draw',
-      blines: null,
       query: '', sel: 0, locked: false
     };
     this.timers = [];
     this.focusIn = false;
-    this.bActive = null;
   }
   componentDidMount() {
     const nav = (navigator.languages && navigator.languages[0]) || navigator.language || 'fr';
@@ -398,115 +349,6 @@ export default class Nuancier extends Component {
       if (i === times.length - 1) this.setState({ zDrawing: false, zScan: -1, zi: final, zDrawn: true });
       else this.setState({ zScan: Math.floor(Math.random() * SESSIONS.length) });
     }, at));
-  }
-
-  // ---------- Bref : chaque ligne est une seule surface — le rendu dessous, la saisie transparente dessus
-  lines(lang) { return this.state.blines ? this.state.blines.slice() : NOTE[lang].slice(); }
-  taskOf(raw) { const m = /^- \[([ xX])\] ?/.exec(raw); return m ? { prefix: m[0], done: m[1] !== ' ' } : null; }
-  textOf(raw) { const tk = this.taskOf(raw); return tk ? raw.slice(tk.prefix.length) : raw; }
-  withText(raw, text) { const tk = this.taskOf(raw); return tk ? (tk.done ? '- [x] ' : '- [ ] ') + text : text; }
-  field(i) { return document.querySelectorAll('.bref-saisie')[i] || null; }
-  focusLine(i, a, b) {
-    this.bActive = i;
-    requestAnimationFrame(() => {
-      const el = this.field(i);
-      if (!el) return;
-      el.focus();
-      const len = el.value.length;
-      const x = a == null ? len : Math.min(a, len);
-      el.setSelectionRange(x, b == null ? x : Math.min(b, len));
-    });
-  }
-  setLines(lines, focus) {
-    this.setState({ blines: lines });
-    if (focus) this.focusLine(focus[0], focus[1], focus[2]);
-  }
-  change(lang, i, value) {
-    const lines = this.lines(lang);
-    const parts = value.split('\n');
-    lines[i] = this.withText(lines[i], parts[0]);
-    // un collage sur plusieurs lignes devient plusieurs lignes
-    if (parts.length > 1) { lines.splice(i + 1, 0, ...parts.slice(1)); this.setLines(lines, [i + parts.length - 1]); }
-    else this.setState({ blines: lines });
-  }
-  wrap(lang, open, close) {
-    const lines = this.lines(lang);
-    let i = this.bActive == null ? lines.length - 1 : this.bActive;
-    if (i >= lines.length) i = lines.length - 1;
-    const el = this.field(i);
-    const text = this.textOf(lines[i]);
-    const a = el ? el.selectionStart : text.length, b = el ? el.selectionEnd : text.length;
-    close = close == null ? open : close;
-    lines[i] = this.withText(lines[i], text.slice(0, a) + open + text.slice(a, b) + close + text.slice(b));
-    this.setLines(lines, a === b ? [i, a + open.length] : [i, a + open.length, b + open.length]);
-  }
-  toggleTask(lang, i) {
-    const lines = this.lines(lang);
-    const tk = this.taskOf(lines[i]);
-    if (!tk) return;
-    lines[i] = (tk.done ? '- [ ] ' : '- [x] ') + this.textOf(lines[i]);
-    this.setState({ blines: lines });
-  }
-  makeTask(lang) {
-    const lines = this.lines(lang);
-    let i = this.bActive == null ? lines.length - 1 : Math.min(this.bActive, lines.length - 1);
-    const el = this.field(i);
-    const pos = el ? el.selectionStart : 0;
-    const raw = lines[i];
-    if (this.taskOf(raw)) { lines[i] = this.textOf(raw); this.setLines(lines, [i, pos]); }
-    else { const body = raw.replace(/^- /, ''); lines[i] = '- [ ] ' + body; this.setLines(lines, [i, Math.max(0, pos - (raw.length - body.length))]); }
-  }
-  key(lang, i, e) {
-    const el = e.target, v = el.value, a = el.selectionStart, b = el.selectionEnd;
-    const lines = this.lines(lang);
-    const raw = lines[i], tk = this.taskOf(raw);
-    const mod = e.ctrlKey || e.metaKey;
-    if (mod && e.key === 'Enter' && tk) { e.preventDefault(); this.toggleTask(lang, i); return; }
-    if (mod && ['b', 'i', 'e', 'h'].includes(e.key.toLowerCase())) {
-      e.preventDefault();
-      const k = e.key.toLowerCase();
-      this.wrap(lang, k === 'b' ? '**' : k === 'i' ? '*' : k === 'e' ? '`' : '==');
-      return;
-    }
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (tk) {
-        // une case vide + Entrée : on sort de la liste
-        if (!v) { lines[i] = ''; this.setLines(lines, [i, 0]); return; }
-        lines[i] = this.withText(raw, v.slice(0, a));
-        lines.splice(i + 1, 0, '- [ ] ' + v.slice(b));
-        this.setLines(lines, [i + 1, 0]);
-        return;
-      }
-      const m = /^(- |> )/.exec(v);
-      if (m && v === m[1]) { lines[i] = ''; this.setLines(lines, [i, 0]); return; }
-      const prefix = m ? m[1] : '';
-      lines[i] = v.slice(0, a);
-      lines.splice(i + 1, 0, prefix + v.slice(b));
-      this.setLines(lines, [i + 1, prefix.length]);
-    } else if (e.key === 'Backspace' && a === 0 && b === 0) {
-      if (tk) { e.preventDefault(); lines[i] = v; this.setLines(lines, [i, 0]); return; }
-      if (i === 0) return;
-      e.preventDefault();
-      const prevText = this.textOf(lines[i - 1]);
-      lines[i - 1] = this.withText(lines[i - 1], prevText + v);
-      lines.splice(i, 1);
-      this.setLines(lines, [i - 1, prevText.length]);
-    } else if (e.key === 'Delete' && a === v.length && b === a && i < lines.length - 1) {
-      e.preventDefault();
-      lines[i] = this.withText(raw, v + this.textOf(lines[i + 1]));
-      lines.splice(i + 1, 1);
-      this.setLines(lines, [i, a]);
-    } else if (e.key === 'ArrowUp' && i > 0) {
-      if (a === 0 && b === 0) { e.preventDefault(); this.focusLine(i - 1); return; }
-      // sur la première ligne visuelle, le navigateur ramène le curseur au début : on monte d'une ligne
-      requestAnimationFrame(() => { if (el.selectionStart === 0 && a !== 0) this.focusLine(i - 1); });
-    } else if (e.key === 'ArrowDown' && i < lines.length - 1) {
-      if (a === v.length) { e.preventDefault(); this.focusLine(i + 1, 0); return; }
-      requestAnimationFrame(() => { if (el.selectionStart === el.value.length && a !== el.value.length) this.focusLine(i + 1, 0); });
-    } else if (e.key === 'Escape') {
-      e.preventDefault(); el.blur();
-    }
   }
 
   // ---------- spot
@@ -621,60 +463,6 @@ export default class Nuancier extends Component {
       title: s.zDrawing ? t.scanning : (lang === 'fr' ? 'Allure de la séance : Z' : 'Session pace: Z') + S.z
     };
 
-    // --- Bref
-    const bc = dark
-      ? { chrome: '#1B1A19', paper: '#242321', ink: '#E8E6E3', faint: '#7C776F', accent: '#D58B62', callout: '#1F2B21', hl: '#5A4A1C', edge: 'rgba(255, 255, 255, 0.08)' }
-      : { chrome: '#EDE9E0', paper: '#FBFAF8', ink: '#2B2A28', faint: '#A39E95', accent: '#9B4824', callout: '#E4EFE1', hl: '#F3E3A0', edge: 'rgba(0, 0, 0, 0.07)' };
-    const L = this.lines(lang);
-    // Le rendu garde exactement les chasses de la saisie : gras par contour, italique synthétisé, code sans changer de police
-    const tokStyle = (k) => ({
-      color: k === 'mark' ? bc.faint : (k === 'link' || k === 'tag') ? bc.accent : 'inherit',
-      stroke: k === 'bold' ? '0.5px currentColor' : '0', style: k === 'ital' ? 'italic' : 'inherit',
-      deco: k === 'strike' ? 'line-through' : 'none',
-      bg: k === 'hl' ? bc.hl : k === 'code' ? 'rgba(127, 127, 127, 0.16)' : 'transparent'
-    });
-    const brefLines = L.map((raw, i) => {
-      const tk = this.taskOf(raw);
-      const text = this.textOf(raw);
-      const bl = tk ? { kind: 'task', prefix: '', body: text } : blockOf(raw);
-      const st = LINE_STYLE[bl.kind] || LINE_STYLE.p;
-      let toks = [];
-      if (bl.prefix) toks.push({ k: 'mark', text: bl.prefix });
-      toks = toks.concat(inlineTokens(bl.body));
-      if (tk && tk.done) toks = toks.map((x) => (x.k === 'text' ? { k: 'strike', text: x.text } : x));
-      // un caractère invisible garde la hauteur d'une ligne vide, et celle d'une fin de ligne en espace
-      toks.push({ k: 'text', text: '​' });
-      return {
-        text, isTask: !!tk, done: tk && tk.done ? 'true' : 'false', mark: tk && tk.done ? 'x' : ' ', taskLabel: t.taskLabel,
-        op: tk && tk.done ? 0.6 : 1,
-        font: st.font, weight: st.weight, size: s.wide ? st.size : st.sizeM, lh: st.lh, margin: st.margin,
-        bg: bl.kind === 'callout' ? bc.callout : 'transparent', pad: bl.kind === 'callout' ? '3px 10px' : '0',
-        label: t.editLine + ' ' + (i + 1),
-        tokens: toks.map((x) => Object.assign({ text: x.text }, tokStyle(x.k))),
-        onChange: (e) => this.change(lang, i, e.target.value),
-        onKey: (e) => this.key(lang, i, e),
-        onFocus: () => { this.bActive = i; },
-        toggle: () => this.toggleTask(lang, i)
-      };
-    });
-    const tool = (glyph, label, run, extra) => Object.assign({ glyph, label, run, color: bc.ink, font: "'IBM Plex Sans', sans-serif", weight: 400, style: 'normal', deco: 'none' }, extra || {});
-    const bref = {
-      lines: brefLines,
-      rail: s.wide ? 'flex' : 'none', paperMargin: s.wide ? '0 10px 10px 0' : '0 8px 8px 8px',
-      h: s.wide ? '300px' : 'auto', winFlex: s.wide ? 'none' : '1 1 0', areaFlex: s.wide ? 'none' : '1 1 0', pad: s.wide ? '18px 22px 10px' : '16px 16px 10px', toolSize: s.wide ? '28px' : '40px',
-      count: L.join(' ').split(/\s+/).filter(Boolean).length + ' ' + t.words + ' · ' + L.join('\n').length + ' ' + t.chars,
-      keepFocus: (e) => e.preventDefault(),
-      tools: [
-        tool('B', t.tools.b, () => this.wrap(lang, '**'), { weight: 700 }),
-        tool('I', t.tools.i, () => this.wrap(lang, '*'), { style: 'italic' }),
-        tool('S', t.tools.s, () => this.wrap(lang, '~~'), { deco: 'line-through' }),
-        tool('H', t.tools.h, () => this.wrap(lang, '=='), { color: bc.accent, weight: 700 }),
-        tool('<>', t.tools.c, () => this.wrap(lang, '`'), { font: "'IBM Plex Mono', monospace" }),
-        tool('[[ ]]', t.tools.l, () => this.wrap(lang, '[[', ']]'), { font: "'IBM Plex Mono', monospace" }),
-        tool('[x]', t.tools.t, () => this.makeTask(lang), { font: "'IBM Plex Mono', monospace", color: bc.accent })
-      ]
-    };
-
     // --- spot
     const sc = Object.assign(dark ? { card: '#242424', ink: '#FFFFFF', rule: 'rgba(255, 255, 255, 0.1)', pill: 'rgba(255, 255, 255, 0.12)' }
                     : { card: '#FAFAFA', ink: '#1E1E1E', rule: 'rgba(0, 0, 0, 0.08)', pill: 'rgba(0, 0, 0, 0.07)' }, { listH: s.wide ? '300px' : 'auto', listFlex: s.wide ? 'none' : '1 1 0', flex: s.wide ? 'none' : '1 1 0' });
@@ -715,7 +503,7 @@ export default class Nuancier extends Component {
     return {
       t, lang, projects, langs, themes, pv,
       spotActive: found.length ? 'spot-r-' + sel : '',
-      zc, zs, zd, zr, bc, bref, sc, results, noResult: results.length === 0, query: s.query, locked: s.locked,
+      zc, zs, zd, zr, sc, results, noResult: results.length === 0, query: s.query, locked: s.locked,
       aplatShots, ac,
       zTab: s.zTab,
       zTabs: [['draw', lang === 'fr' ? 'Tirage' : 'Draw'], ['calc', lang === 'fr' ? 'Allures' : 'Paces']].map(([k, label]) => ({
@@ -963,43 +751,7 @@ export default class Nuancier extends Component {
 </>) : null}
 </div>
 </div></>)}</>) : null}
-{bd.isBref ? (<><div style={css(`flex: ${v.bref.winFlex}; min-height: 0; display: flex; flex-direction: column; border-radius: 12px; background: ${v.bc.chrome}; border: 1px solid ${v.bc.edge}; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16); overflow: hidden; color: ${v.bc.ink}`)}>
-<div aria-hidden="true" style={css(`display: flex; justify-content: flex-end; align-items: center; gap: 16px; height: 32px; padding: 0 14px; color: ${v.bc.faint}`)}>
-<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M1 5h8"></path></svg>
-<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="1" y="1" width="8" height="8"></rect></svg>
-<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M1 1l8 8M9 1l-8 8"></path></svg>
-</div>
-<div style={css(`display: flex; flex: ${v.bref.winFlex}; min-height: 0`)}>
-<div aria-hidden="true" style={css(`width: 40px; flex: none; display: ${v.bref.rail}; flex-direction: column; align-items: center; gap: 16px; padding-top: 10px; color: ${v.bc.faint}`)}>
-<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M3 2h7l3 3v9H3z"></path></svg>
-<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><circle cx="8" cy="8" r="5.5"></circle><path d="M8 5v3l2 2"></path></svg>
-<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><circle cx="4" cy="12" r="1.6"></circle><circle cx="12" cy="4" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><path d="M5.4 11l5.2-5.6M5.6 12h4.8"></path></svg>
-<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M6 2L4.5 14M11.5 2L10 14M2.5 5.5h11M2 10.5h11"></path></svg>
-<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5L14 14"></path></svg>
-</div>
-<div style={css(`flex: 1; min-width: 0; min-height: 0; margin: ${v.bref.paperMargin}; border-radius: 10px; background: ${v.bc.paper}; display: flex; flex-direction: column`)}>
-<div style={css(`flex: ${v.bref.areaFlex}; height: ${v.bref.h}; min-height: 0; overflow-y: auto; padding: ${v.bref.pad}; font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; line-height: 1.6; cursor: text`)}>
-{(v.bref.lines).map((l, l_i) => (<Fragment key={l_i}>
-<div style={css(`display: flex; align-items: baseline; gap: 6px; margin: ${l.margin}; padding: ${l.pad}; border-radius: 6px; background: ${l.bg}`)}>
-{l.isTask ? (<>
-<button type="button" aria-pressed={l.done} aria-label={l.taskLabel} onClick={l.toggle} onMouseDown={v.bref.keepFocus} style={css(`flex: none; padding: 0 2px; border: 0; background: none; color: ${v.bc.accent}; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 13px; line-height: 1.6; cursor: pointer`)}>[{l.mark}]</button>
-</>) : null}
-<div style={css(`position: relative; flex: 1; min-width: 0; font-family: ${l.font}; font-weight: ${l.weight}; font-size: ${l.size}; line-height: ${l.lh}`)}>
-<div aria-hidden="true" style={css(`white-space: pre-wrap; overflow-wrap: anywhere; pointer-events: none; opacity: ${l.op}`)}>{(l.tokens).map((k, k_i) => (<Fragment key={k_i}><span style={css(`color: ${k.color}; -webkit-text-stroke: ${k.stroke}; font-style: ${k.style}; text-decoration-line: ${k.deco}; background: ${k.bg}; border-radius: 3px`)}>{k.text}</span></Fragment>))}</div>
-<textarea className="bref-saisie" rows="1" value={l.text} onChange={l.onChange} onKeyDown={l.onKey} onFocus={l.onFocus} aria-label={l.label} spellCheck="false" style={css(`position: absolute; inset: 0; width: 100%; height: 100%; box-sizing: border-box; margin: 0; padding: 0; border: 0; outline: none; resize: none; overflow: hidden; background: transparent; color: transparent; caret-color: ${v.bc.accent}; font: inherit; letter-spacing: inherit; white-space: pre-wrap; overflow-wrap: anywhere`)}></textarea>
-</div>
-</div>
-</Fragment>))}
-</div>
-<div style={css(`display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 6px 10px; border-top: 1px solid ${v.bc.edge}`)}>
-{(v.bref.tools).map((o, o_i) => (<Fragment key={o_i}>
-<button type="button" className="bref-outil" aria-label={o.label} title={o.label} onMouseDown={v.bref.keepFocus} onClick={o.run} style={css(`min-width: ${v.bref.toolSize}; height: ${v.bref.toolSize}; padding: 0 6px; border: 0; border-radius: 6px; background-color: transparent; color: ${o.color}; font-family: ${o.font}; font-weight: ${o.weight}; font-style: ${o.style}; text-decoration-line: ${o.deco}; font-size: 13px; cursor: pointer`)}>{o.glyph}</button>
-</Fragment>))}
-<span style={css(`margin-left: auto; font-size: 11px; color: ${v.bc.faint}; font-variant-numeric: tabular-nums`)}>{v.bref.count}</span>
-</div>
-</div>
-</div>
-</div></>) : null}
+{bd.isBref ? <BrefDemo dark={v.dark} wide={v.wide} lang={v.lang} /> : null}
 {bd.isSpot ? (<><div style={css(`position: relative; flex: ${v.sc.flex}; min-height: 0; display: flex; flex-direction: column; margin-top: 8px; border-radius: 16px; background: ${v.sc.card}; color: ${v.sc.ink}; box-shadow: 0 30px 70px rgba(10, 6, 30, 0.45); overflow: hidden; font-family: 'Inter', sans-serif`)}>
 <div style={css(`display: flex; align-items: center; gap: 12px; padding: 14px 18px`)}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" style={css(`opacity: 0.6`)}><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
