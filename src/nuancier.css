@@ -49,7 +49,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:1px dashed curr
 @media (prefers-reduced-motion: reduce){.rc-f{animation:none}}
 @media (prefers-reduced-motion: reduce){.aplat-piste,.zoned-sweep,.dada-roule,.zoned-pose{animation:none}}
 .bande{transition:flex-grow .7s cubic-bezier(.2,0,0,1),flex-basis .7s cubic-bezier(.2,0,0,1)}
-.bande-nom{transition:font-size .5s cubic-bezier(.2,0,0,1),opacity .3s ease}
+.bande-nom{transition:transform .5s cubic-bezier(.2,0,0,1),opacity .3s ease}
 @keyframes bande-entre{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .bande-contenu{animation:bande-entre .5s cubic-bezier(.2,0,0,1) .18s both}
 .index-ligne{transition:opacity .25s ease}

@@ -4,7 +4,11 @@ import DebarrasDemo from './demos/Debarras.jsx';
 import AstrolabeDemo from './demos/Astrolabe.jsx';
 
 // "a: b; c: d" -> { a: 'b', c: 'd' }, so the design's inline styles stay readable.
+const cssCache = new Map();
 const css = (s) => {
+  const hit = cssCache.get(s);
+  if (hit) return hit;
+  if (cssCache.size > 3000) cssCache.clear();
   const o = {};
   for (const decl of s.split(';')) {
     const i = decl.indexOf(':');
@@ -14,6 +18,7 @@ const css = (s) => {
     if (!k || !val) continue;
     o[k.startsWith('--') ? k : k.replace(/^-(webkit|moz|ms)-/, (_, p) => p[0].toUpperCase() + p.slice(1) + '-').replace(/-(\w)/g, (_, c) => c.toUpperCase())] = val;
   }
+  cssCache.set(s, o);
   return o;
 };
 
@@ -361,11 +366,18 @@ export default class Nuancier extends Component {
     [this.mq, this.mw, this.mt].forEach((q) => q && q.addEventListener && q.addEventListener('change', this.sync));
     this.setState({ sysLang });
     this.sync();
-    this.tick = setInterval(() => this.setState({ now: new Date() }), 1000);
+    this.tick = setInterval(() => { if (this.state.band === ORDER.indexOf('spot')) this.setState({ now: new Date() }); }, 1000);
+    // keyboard vs pointer: a panel holds open on focus only for keyboard users
+    this.onKeyMode = (e) => { if (e.key === 'Tab') this.kbd = true; };
+    this.onPointerMode = () => { this.kbd = false; };
+    document.addEventListener('keydown', this.onKeyMode, true);
+    document.addEventListener('pointerdown', this.onPointerMode, true);
   }
   componentWillUnmount() {
     [this.mq, this.mw, this.mt].forEach((q) => q && q.removeEventListener && q.removeEventListener('change', this.sync));
     clearInterval(this.tick);
+    document.removeEventListener('keydown', this.onKeyMode, true);
+    document.removeEventListener('pointerdown', this.onPointerMode, true);
     this.timers.forEach(clearTimeout);
   }
   later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
@@ -802,6 +814,12 @@ export default class Nuancier extends Component {
   openBand(i) {
     clearTimeout(this.hoverT);
     this.setState({ band: i });
+    // the band's button goes away once it opens: a keyboard user lands on its first control
+    if (this.kbd) requestAnimationFrame(() => {
+      const c = document.querySelectorAll('section.bande')[i]?.querySelector('.bande-contenu');
+      const f = c && c.querySelector('button, a[href], input, textarea, [tabindex="0"]');
+      if (f) f.focus({ preventScroll: true });
+    });
   }
   renderVals() {
     const v = this.appVals();
@@ -830,8 +848,10 @@ export default class Nuancier extends Component {
         font: P ? P.font : "'Iosevka', monospace", text: I.text, weight: I.weight, track: I.track, tt: P && P.upper ? 'uppercase' : 'none',
         flex, disp, closed: !on, isOpen: on,
         wm: W ? 'vertical-rl' : 'horizontal-tb', nameRot: W ? 'rotate(180deg)' : 'none',
-        nameLeft: W ? (on ? 'auto' : '12px') : '20px', nameBottom: W ? '24px' : 'auto', nameTop: W ? 'auto' : '50%',
-        nameSize: W ? (on ? '0px' : any ? '34px' : 'clamp(36px, 4.4vw, 76px)') : 'clamp(26px, 7.4vw, 34px)',
+        nameLeft: W ? '12px' : '20px', nameBottom: W ? '24px' : 'auto', nameTop: W ? 'auto' : '50%',
+        // one font size, scaled down with a transform: animating font-size relaid out every name on every frame
+        nameSize: W ? 'clamp(36px, 4.4vw, 76px)' : 'clamp(26px, 7.4vw, 34px)',
+        nameScale: W && any ? (34 / Math.min(76, Math.max(36, 0.044 * window.innerWidth))).toFixed(3) : '1',
         nameOp: on ? 0 : 1,
         isApp: !!P, isOthers: !P,
         isTrced: key === 'trced', isDebarras: key === 'debarras', isAstrolabe: key === 'astrolabe',
@@ -858,6 +878,7 @@ export default class Nuancier extends Component {
       headDisp: !W && any ? 'none' : 'flex',
       asideFlex: W ? '0 0 clamp(300px, 25vw, 360px)' : 'none', asidePad: W ? '56px 36px 36px' : '22px 20px 14px',
       cPad: W ? '48px 36px 28px 40px' : '8px 20px max(16px, env(safe-area-inset-bottom))',
+      cW: W ? 'calc(100vw - clamp(300px, 25vw, 360px) - ' + (list.length - 1) * 56 + 'px)' : 'auto',
       cGap: W ? '18px' : '12px', pitchSize: W ? '22px' : '17px',
       factsDisp: W ? 'flex' : 'none', featDisp: W ? 'grid' : 'none',
       featCols: W ? 'repeat(3, minmax(0, 1fr))' : 'minmax(0, 1fr)', featGap: W ? '20px' : '4px', featMinW: W ? '320px' : '0',
@@ -881,9 +902,24 @@ export default class Nuancier extends Component {
         };
       })(),
       leave: () => { if (!s.touch) { clearTimeout(this.hoverT); } },
-      leaveNav: () => { clearTimeout(this.hoverT); if (!s.touch && W && !this.focusIn) this.setState({ band: -1 }); },
-      navFocus: () => { this.focusIn = true; },
-      navBlur: () => { this.focusIn = false; }
+      leaveNav: (e) => {
+        clearTimeout(this.hoverT);
+        const kbdInside = this.kbd && e.currentTarget.contains(document.activeElement);
+        if (!s.touch && W && !kbdInside) this.setState({ band: -1 });
+      },
+      navFocus: () => {},
+      // focus left the bands (Tab out, or a click elsewhere) while the pointer is not on them: close
+      navBlur: (e) => {
+        const nav = e.currentTarget;
+        if (s.touch || !W || nav.contains(e.relatedTarget) || nav.matches(':hover')) return;
+        this.setState({ band: -1 });
+      },
+      navKey: (e) => {
+        if (e.key !== 'Escape' || !W || s.band === -1 || (e.target.matches('input') && e.target.value)) return;
+        const i = s.band;
+        this.setState({ band: -1 });
+        requestAnimationFrame(() => document.querySelectorAll('section.bande')[i]?.querySelector('button')?.focus({ preventScroll: true }));
+      }
     });
   }
 
@@ -910,14 +946,14 @@ export default class Nuancier extends Component {
 </>) : null}
 </header>
 
-<nav aria-label="apps" onMouseLeave={v.leaveNav} onFocus={v.navFocus} onBlur={v.navBlur} style={css(`flex: 1 1 0; min-width: 0; min-height: 0; display: flex; flex-direction: ${v.dir}`)}>
+<nav aria-label="apps" onMouseLeave={v.leaveNav} onFocus={v.navFocus} onBlur={v.navBlur} onKeyDown={v.navKey} style={css(`flex: 1 1 0; min-width: 0; min-height: 0; display: flex; flex-direction: ${v.dir}`)}>
 {(v.bands).map((bd, bd_i) => (<Fragment key={bd_i}>
 <section className="bande" onMouseEnter={bd.enter} aria-label={bd.label} style={css(`position: relative; flex: ${bd.flex}; display: ${bd.disp}; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; background: ${bd.bg}; color: ${bd.ink}`)}>
 
-<span className="bande-nom" aria-hidden="true" style={css(`position: absolute; left: ${bd.nameLeft}; bottom: ${bd.nameBottom}; top: ${bd.nameTop}; writing-mode: ${bd.wm}; transform: ${bd.nameRot}; font-family: ${bd.font}; font-weight: ${bd.weight}; letter-spacing: ${bd.track}; text-transform: ${bd.tt}; font-size: ${bd.nameSize}; opacity: ${bd.nameOp}; line-height: 0.9; white-space: nowrap`)}>{bd.name}</span>
+<span className="bande-nom" aria-hidden="true" style={css(`position: absolute; left: ${bd.nameLeft}; bottom: ${bd.nameBottom}; top: ${bd.nameTop}; transform: scale(${bd.nameScale}); transform-origin: left bottom; font-family: ${bd.font}; font-weight: ${bd.weight}; letter-spacing: ${bd.track}; text-transform: ${bd.tt}; font-size: ${bd.nameSize}; opacity: ${bd.nameOp}; line-height: 0.9; white-space: nowrap`)}><span style={css(`display: block; writing-mode: ${bd.wm}; transform: ${bd.nameRot}`)}>{bd.name}</span></span>
 
 {bd.closed ? (<>
-<button type="button" onFocus={bd.enter} onClick={bd.open} aria-expanded="false" aria-label={bd.label} style={css(`position: absolute; inset: 0; z-index: 1; border: 0; padding: 0; background: transparent; cursor: pointer`)}></button>
+<button type="button" onClick={bd.open} aria-expanded="false" aria-label={bd.label} style={css(`position: absolute; inset: 0; z-index: 1; border: 0; padding: 0; background: transparent; cursor: pointer`)}></button>
 </>) : null}
 
 {bd.isOpen ? (<>
@@ -927,7 +963,7 @@ export default class Nuancier extends Component {
 <span style={css(`font-family: ${bd.font}; font-weight: ${bd.weight}; text-transform: ${bd.tt}; font-size: 22px`)}>{bd.name}</span>
 </div>
 </>) : null}
-<div className="bande-contenu" style={css(`position: relative; z-index: 2; flex: 1; min-height: 0; box-sizing: border-box; padding: ${v.cPad}; display: flex; flex-direction: column; gap: ${v.cGap}`)}>
+<div className="bande-contenu" style={css(`position: relative; z-index: 2; flex: 1; min-height: 0; width: ${v.cW}; flex-shrink: 0; contain: layout style; box-sizing: border-box; padding: ${v.cPad}; display: flex; flex-direction: column; gap: ${v.cGap}`)}>
 {bd.isApp ? (<>
 <p style={css(`margin: 0; font-family: ${bd.text}; font-size: ${v.pitchSize}; line-height: 1.35; max-width: 36ch`)}>{bd.pitch}</p>
 <ul style={css(`list-style: none; margin: 0; padding: 0; display: ${v.factsDisp}; flex-wrap: wrap; gap: 6px; font-family: 'Iosevka', monospace; font-size: 12px`)}>
