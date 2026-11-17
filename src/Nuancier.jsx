@@ -330,12 +330,6 @@ const TRCED = {
   en: { tagline: 'One thing, done well.', apps: [['habit.', 'one week, one grid', 'v0.1.1'], ['journal.', 'one year, one day at a time', 'v0.1.0'], ['race.', 'all your races, one line each', 'v0.1.2'], ['urge.', 'one urge, thirty days, one question', 'v0.1.0']],
     principles: ['One thing at a time. What isn’t essential isn’t built.', 'No account. Open it, use it.', 'No tracker, no ads, no collection.'] }
 };
-const ASTRO = [
-  ['eeb6ce2d7e6bc2866aa9a24fd1da20fc', 'Aujourd’hui', 'Today'],
-  ['46cae7011ef6b80c62d467b4201421aa', 'Boucles', 'Loops'],
-  ['3ad9ee7ffcb4600eb7e01b1ffd4af9ce', 'Carte de chaleur', 'Heatmap'],
-  ['415c1b74dc5573a6d6f91a655becbb35', 'Activité', 'Activity']
-];
 
 export default class Nuancier extends Component {
   constructor(props) {
@@ -883,7 +877,6 @@ export default class Nuancier extends Component {
       factsDisp: W ? 'flex' : 'none', featDisp: W ? 'grid' : 'none',
       featCols: W ? 'repeat(3, minmax(0, 1fr))' : 'minmax(0, 1fr)', featGap: W ? '20px' : '4px', featMinW: W ? '320px' : '0',
       featSize: W ? '13px' : '12px', featDir: W ? 'column' : 'row',
-      imgFit: W ? 'contain' : 'cover', imgH: W ? 'auto' : '100%', imgFlex: W ? 'none' : '1 1 0',
       social: [['github', 'https://github.com/alarboulletmarin', 'branch'], ['X (@andddrealm)', 'https://x.com/andddrealm', 'person']]
         .map(([label, href, i]) => Object.assign({ label, href }, ICON[i])),
       langs: v.langs.map((o) => Object.assign({}, o, { ring: o.on === 'true' ? 'currentColor' : 'transparent', op2: o.on === 'true' ? 1 : 0.6, aria: o.label === 'fr' ? 'Français' : 'English' })),
@@ -891,16 +884,6 @@ export default class Nuancier extends Component {
       tr: { tagline: TRCED[lang].tagline, rule: dark ? 'rgba(236, 235, 230, 0.18)' : 'rgba(23, 24, 26, 0.16)',
         apps: TRCED[lang].apps.map(([name, desc, status]) => ({ name, desc, status })),
         principles: TRCED[lang].principles.map((text, k) => ({ n: '0' + (k + 1), text })) },
-      deb: { img: dark ? '/img/17c3279f79ea203dbd70a4f263f043f9.webp' : '/img/2b24f2501602ded8453d998b123eb763.webp', alt: L('Débarras : un dossier dessiné comme un plan, chaque parcelle à sa taille', 'Débarras: a folder drawn as a plan, each plot sized by what it takes') },
-      astro: (() => {
-        const k = s.astroTab || 0, ac = EXTRA.astrolabe[mode];
-        return {
-          img: '/img/' + ASTRO[k][0] + '.webp', alt: 'Astrolabe — ' + L(ASTRO[k][1], ASTRO[k][2]) + L(' (données inventées)', ' (made-up data)'),
-          tabs: ASTRO.map(([id, fr, en], j) => ({ label: L(fr, en), on: j === k ? 'true' : 'false',
-            bg: j === k ? ac.accent : 'transparent', fg: j === k ? (dark ? '#1B1A19' : '#FFFFFF') : 'inherit', border: j === k ? ac.accent : 'currentColor',
-            pick: () => this.setState({ astroTab: j }) }))
-        };
-      })(),
       leave: () => { if (!s.touch) { clearTimeout(this.hoverT); } },
       leaveNav: (e) => {
         clearTimeout(this.hoverT);
