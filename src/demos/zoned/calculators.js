@@ -53,9 +53,10 @@ export function calculatePaceZones(vma) {
 export function calculateReference({ mode, distance, time, speed }) {
   let vma;
   if (mode === 'race') {
-    const parts = /^(\d{1,2}):([0-5]\d):([0-5]\d)$/.exec(time.trim());
+    // h:mm:ss, or mm:ss for short races ("45:00").
+    const parts = /^(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)$/.exec(time.trim());
     if (!parts) return { error: 'invalidTime' };
-    const minutes = Number(parts[1]) * 60 + Number(parts[2]) + Number(parts[3]) / 60;
+    const minutes = Number(parts[1] ?? 0) * 60 + Number(parts[2]) + Number(parts[3]) / 60;
     if (minutes <= 0) return { error: 'invalidTime' };
     vma = vmaFromRaceTime(distance, minutes, 6.5);
     if (!Number.isFinite(vma) || vma < 4 || vma > 35) return { error: 'invalidRace' };
