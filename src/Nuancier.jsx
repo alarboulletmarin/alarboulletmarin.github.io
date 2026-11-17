@@ -1,5 +1,7 @@
 // Generated once from the "Nuancier" design (Claude Design canvas), then edited by hand.
 import { Component, Fragment } from 'react';
+import DebarrasDemo from './demos/Debarras.jsx';
+import AstrolabeDemo from './demos/Astrolabe.jsx';
 
 // "a: b; c: d" -> { a: 'b', c: 'd' }, so the design's inline styles stay readable.
 const css = (s) => {
@@ -849,7 +851,7 @@ export default class Nuancier extends Component {
       };
     });
     return Object.assign(v, {
-      bands, base, wide: W, narrow: !W, narrowFoot: !W && !any,
+      bands, base, dark, wide: W, narrow: !W, narrowFoot: !W && !any,
       bio: W ? t.bio : BIO_SHORT[lang],
       bioMax: W ? '34ch' : 'none',
       dir: W ? 'row' : 'column', minH: W ? '640px' : '0',
@@ -1057,15 +1059,8 @@ export default class Nuancier extends Component {
 </ol>
 </div>
 </>) : null}
-{bd.isDebarras ? (<>
-<img src={v.deb.img} alt={v.deb.alt} style={css(`display: block; width: 100%; height: ${v.imgH}; max-height: 100%; min-height: 0; object-fit: ${v.imgFit}; object-position: left top; border-radius: 10px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16)`)} />
-</>) : null}
-{bd.isAstrolabe ? (<>
-<div role="tablist" aria-label="Astrolabe" style={css(`display: flex; flex-wrap: wrap; gap: 4px; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px`)}>
-{(v.astro.tabs).map((y, y_i) => (<Fragment key={y_i}><button type="button" role="tab" aria-selected={y.on} onClick={y.pick} style={css(`min-height: 36px; padding: 0 14px; border: 1px solid ${y.border}; border-radius: 999px; background: ${y.bg}; color: ${y.fg}; font: inherit; cursor: pointer`)}>{y.label}</button></Fragment>))}
-</div>
-<img src={v.astro.img} alt={v.astro.alt} style={css(`display: block; width: 100%; height: ${v.imgH}; max-height: 100%; min-height: 0; flex: ${v.imgFlex}; object-fit: ${v.imgFit}; object-position: left top; border-radius: 10px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14)`)} />
-</>) : null}
+{bd.isDebarras ? <DebarrasDemo dark={v.dark} wide={v.wide} lang={v.lang} /> : null}
+{bd.isAstrolabe ? <AstrolabeDemo dark={v.dark} wide={v.wide} lang={v.lang} /> : null}
 {bd.isDada ? (<><div aria-label="Dada" role="img" style={css(`display: flex; gap: 8px; padding-top: 6px`)}>
 {(v.dd.logo).map((g, g_i) => (<Fragment key={g_i}>
 <span style={css(`display: grid; place-items: center; width: clamp(46px, 12vw, 58px); height: clamp(54px, 14vw, 68px); box-sizing: border-box; border: 4px solid ${v.dd.ink}; border-radius: 18px; box-shadow: 0 5px 0 ${v.dd.shade}; background: ${g.bg}; color: ${g.fg}; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(30px, 8vw, 40px); line-height: 1; transform: rotate(${g.rot})`)}>{g.c}</span>
