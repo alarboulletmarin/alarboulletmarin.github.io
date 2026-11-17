@@ -1,12 +1,22 @@
 // Generated once from the "Nuancier" design (Claude Design canvas), then edited by hand.
-import { Component, Fragment } from 'react';
-import DebarrasDemo from './demos/Debarras.jsx';
-import AstrolabeDemo from './demos/Astrolabe.jsx';
-import AplatDemo from './demos/Aplat.jsx';
-import BrefDemo from './demos/Bref.jsx';
-import DadaDemo from './demos/Dada.jsx';
-import TrcedDemo from './demos/Trced.jsx';
-import ZonedCalc from './demos/ZonedCalc.jsx';
+import { Component, Fragment, Suspense, lazy } from 'react';
+
+// Demos are mounted only when their band opens: load them as separate chunks,
+// then fetch them all once the page is idle so the first open does not wait.
+const loaders = [];
+const demo = (load) => {
+  loaders.push(load);
+  const Lazy = lazy(load);
+  return (props) => <Suspense fallback={null}><Lazy {...props} /></Suspense>;
+};
+const DebarrasDemo = demo(() => import('./demos/Debarras.jsx'));
+const AstrolabeDemo = demo(() => import('./demos/Astrolabe.jsx'));
+const AplatDemo = demo(() => import('./demos/Aplat.jsx'));
+const BrefDemo = demo(() => import('./demos/Bref.jsx'));
+const DadaDemo = demo(() => import('./demos/Dada.jsx'));
+const TrcedDemo = demo(() => import('./demos/Trced.jsx'));
+const ZonedCalc = demo(() => import('./demos/ZonedCalc.jsx'));
+const preloadDemos = () => loaders.forEach((load) => load());
 
 // "a: b; c: d" -> { a: 'b', c: 'd' }, so the design's inline styles stay readable.
 const cssCache = new Map();
@@ -297,6 +307,7 @@ export default class Nuancier extends Component {
     this.focusIn = false;
   }
   componentDidMount() {
+    (window.requestIdleCallback || ((f) => setTimeout(f, 1500)))(preloadDemos);
     const nav = (navigator.languages && navigator.languages[0]) || navigator.language || 'fr';
     const sysLang = nav.toLowerCase().startsWith('fr') ? 'fr' : 'en';
     const mm = (q) => (window.matchMedia ? window.matchMedia(q) : null);
